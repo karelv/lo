@@ -1,0 +1,9 @@
+bigchaindb:
+    url: https://test.bigchaindb.com
+headers:
+    app_id: 2e229cf8
+    app_key: 323e58f2f88da58e4dba8f35c4699823
+user:
+    name: karel
+    private_key: CCZneqbgnzHeHzTZoeWHi4q6WKMo6QRJuGcHXCQzQt6
+    public_key: 6ggcTfDnsQeq6XEzgxhURfFXL5fFkQGdHWZd9F5eUPip

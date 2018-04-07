@@ -224,20 +224,30 @@ def do_append(asset_id, burn, metadata):
 
 
 @cli.command()
-@click.option('--obj', help='the object type name to append.')
-@click.option('--obj-id', help='the object ID to append.')
 @click.option('--asset-id', help='the asset-id of the object to append metadata to.')
 @click.option('--odo', help='append odo to metadata.')
-@click.option('--burn', is_flag=True, help='burn the entry in the database.')
-def append(obj, obj_id, asset_id, odo, burn):
-  """ Append/Burn (CRAB) metadata to the bigchaindb. """
+def append(asset_id, odo):
+  """ Append (CRAB) metadata to the bigchaindb. """
 
   metadata = {'odo': odo}
-  r = do_append (asset_id, burn, metadata)
+  r = do_append (asset_id, False, metadata)
   if r == False:
     print ("ERROR: Failed to append asset...")
   else:
     print ("Success: append asset with transaction-id: '{}'".format (r))
+
+
+@cli.command()
+@click.option('--asset-id', help='the asset-id of the object to append metadata to.')
+def burn(asset_id):
+  """ Burn (CRAB) metadata to the bigchaindb. """
+
+  r = do_append (asset_id, True, {})
+  if r == False:
+    print ("ERROR: Failed to append asset...")
+  else:
+    print ("Success: append asset with transaction-id: '{}'".format (r))
+
 
 
 @cli.command()

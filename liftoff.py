@@ -11,7 +11,6 @@ bdb_cfg = {}
 config_file = None
 bdb = None
 
-
 @click.group()
 @click.option('--config', help='configuration file.', default='liftoff.yml')
 def cli(config):
@@ -23,7 +22,6 @@ def cli(config):
   bdb = BigchainDB(
     bdb_cfg['bigchaindb']['url'],
     headers=bdb_cfg['headers'])
-
 
 @cli.command()
 @click.option('--name', help='name of the user.')
@@ -49,7 +47,6 @@ def user(name, private_key):
       show_keys.append('private_key')
     for key in show_keys:
       print ("{:>15s}: {}".format(key, bdb_cfg['user'][key]))
-
 
 def do_create (obj, obj_id, data, metadata):
   global bdb_cfg, bdb
@@ -91,7 +88,6 @@ def do_create (obj, obj_id, data, metadata):
     return False
   return txid
 
-
 @cli.command()
 @click.option('--obj', required=True, help='the object type name to create.')
 @click.option('--obj-id', required=True, help='the object ID to create.')
@@ -118,7 +114,6 @@ def create(obj, obj_id):
   else:
     print ("Success: created asset '{}'".format (r))
 
-
 def do_get_search_query(obj, obj_id):
   global bdb_cfg
   search_query = '"__liftoff__{}'.format(bdb_cfg['headers']['app_key'])
@@ -128,7 +123,6 @@ def do_get_search_query(obj, obj_id):
       search_query += ' {}'.format(obj_id)
   search_query += ' "'
   return search_query
-
 
 def do_read (obj, obj_id):
   global bdb
@@ -141,7 +135,6 @@ def do_read (obj, obj_id):
     asset['details'] = bdb.transactions.get(asset_id=asset['id'])
   return assets
 
-
 def do_read_by_query (query):
   global bdb
   assets = bdb.assets.get(search=query)
@@ -149,7 +142,6 @@ def do_read_by_query (query):
   for asset in assets:
     asset['details'] = bdb.transactions.get(asset_id=asset['id'])
   return assets
-
 
 def do_print_assets(assets):
   for asset in assets:
@@ -173,7 +165,6 @@ def do_print_assets(assets):
         pprint (ad['metadata'])
       pprint ("<<<")
 
-
 @cli.command()
 @click.option('--obj', help='the object type name to read.')
 @click.option('--obj-id', help='the object ID to read.')
@@ -184,7 +175,6 @@ def read(obj, obj_id):
 
   do_print_assets(assets)
 
-
 @cli.command()
 @click.option('--query', help='the query to execute.')
 def query(query):
@@ -193,8 +183,6 @@ def query(query):
   assets = do_read_by_query (query)
 
   do_print_assets(assets)
-
-
 
 def do_append(asset_id, metadata):
   global bdb_cfg, bdb
@@ -230,7 +218,6 @@ def do_append(asset_id, metadata):
 
   return sent_transfer_tx['id']
 
-
 def do_burn(asset_id):
   global bdb_cfg, bdb
 
@@ -265,8 +252,6 @@ def do_burn(asset_id):
 
   return sent_transfer_tx['id']
 
-
-
 @cli.command()
 @click.option('--asset-id', help='the asset-id of the object to append metadata to.')
 @click.option('--odo', help='append odo to metadata.')
@@ -280,7 +265,6 @@ def append(asset_id, odo):
   else:
     print ("Success: append asset with transaction-id: '{}'".format (r))
 
-
 @cli.command()
 @click.option('--asset-id', help='the asset-id of the object to append metadata to.')
 def burn(asset_id):
@@ -291,8 +275,6 @@ def burn(asset_id):
     print ("ERROR: Failed to append asset...")
   else:
     print ("Success: burn asset with transaction-id: '{}'".format (r))
-
-
 
 @cli.command()
 @click.option('--name', required=True, help='the name of the playground to be created.')
@@ -308,7 +290,6 @@ def playground(name):
     print ("ERROR: Failed to create asset...")
   else:
     print ("Success: created asset '{}'".format (r))
-
 
 @cli.command()
 @click.option('--playground', required=True, help='the playground forwhich the simulation is wanted.')
@@ -329,7 +310,6 @@ def upload_simulation (playground, simulation_file):
     print ("ERROR: Failed to append asset...")
   else:
     print ("Success: append asset with transaction-id: '{}'".format (r))
-
 
 @cli.command()
 @click.option('--playground', required=True, help='the playground forwhich the simulation is wanted.')
@@ -352,7 +332,6 @@ def download_simulation (playground, simulation_file):
 
   with open (simulation_file, 'w') as out:
     out.write (json.dumps(simulations))
-
 
 if __name__ == "__main__":
   cli()

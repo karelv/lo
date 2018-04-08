@@ -222,18 +222,7 @@ def do_burn(asset_id):
 
   transfer_asset = { 'id': asset_id }
 
-  asset_details = bdb.transactions.get(asset_id=transfer_asset['id'])
-
-  output_index = 0
-  output = asset_details[0]['outputs'][output_index]
-  transfer_input = {
-    'fulfillment': output['condition']['details'],
-    'fulfills': {
-      'output_index': output_index,
-      'transaction_id': asset_details[-1]['id'],
-    },
-    'owners_before': output['public_keys'],
-  }
+  transfer_input = get_transfer_input (transfer_asset)
 
   lost_user = generate_keypair ()
 

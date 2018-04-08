@@ -7,9 +7,9 @@ from pprint import pprint
 import calendar
 import time
 
-bdb_cfg = {}
+from liftoff_do import *
+
 config_file = None
-bdb = None
 
 @click.group()
 @click.option('--config', help='configuration file.', default='liftoff.yml')

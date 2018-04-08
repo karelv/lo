@@ -119,37 +119,39 @@ def create(obj, obj_id):
     print ("Success: created asset '{}'".format (r))
 
 
-def do_read (obj, obj_id, query=None):
-  global bdb_cfg, bdb
-
+def do_get_search_query(obj, obj_id):
+  global bdb_cfg
   search_query = '"__liftoff__{}'.format(bdb_cfg['headers']['app_key'])
   if obj is not None:
     search_query += ' {}'.format(obj)
     if obj_id is not None:
       search_query += ' {}'.format(obj_id)
   search_query += ' "'
-  if query is not None:
-    search_query = query
+  return search_query
+
+
+def do_read (obj, obj_id):
+  global bdb
+
+  search_query = do_get_search_query(obj, obj_id)
 
   assets = bdb.assets.get(search=search_query)
-
-  # print ("results for query: '{}'".format (search_query))
-  # print ("--------------------{}-".format ('-' * len(search_query)))
 
   for asset in assets:
     asset['details'] = bdb.transactions.get(asset_id=asset['id'])
   return assets
 
 
-@cli.command()
-@click.option('--obj', help='the object type name to read.')
-@click.option('--obj-id', help='the object ID to read.')
-@click.option('--query', help='the object ID to read.')
-def read(obj, obj_id, query):
-  """ Read (CRAB) data from the bigchaindb. """
+def do_read_by_query (query):
+  global bdb
+  assets = bdb.assets.get(search=query)
 
-  assets = do_read (obj, obj_id, query)
+  for asset in assets:
+    asset['details'] = bdb.transactions.get(asset_id=asset['id'])
+  return assets
 
+
+def do_print_assets(assets):
   for asset in assets:
     asset_details = asset['details']
     print ("asset")
@@ -172,16 +174,36 @@ def read(obj, obj_id, query):
       pprint ("<<<")
 
 
-def do_append(asset_id, burn, metadata):
+@cli.command()
+@click.option('--obj', help='the object type name to read.')
+@click.option('--obj-id', help='the object ID to read.')
+def read(obj, obj_id):
+  """ Read (CRAB) data from the bigchaindb. """
+
+  assets = do_read (obj, obj_id)
+
+  do_print_assets(assets)
+
+
+@cli.command()
+@click.option('--query', help='the query to execute.')
+def query(query):
+  """ Read by query (CRAB) data from the bigchaindb. """
+
+  assets = do_read_by_query (query)
+
+  do_print_assets(assets)
+
+
+
+def do_append(asset_id, metadata):
   global bdb_cfg, bdb
 
   now_epoch = calendar.timegm(time.gmtime())
   db_metadata = metadata
   db_metadata['appended_at'] = now_epoch
 
-  transfer_asset = {
-    'id': asset_id
-  }
+  transfer_asset = { 'id': asset_id }
 
   asset_details = bdb.transactions.get(asset_id=transfer_asset['id'])
 
@@ -196,24 +218,17 @@ def do_append(asset_id, burn, metadata):
     'owners_before': output['public_keys'],
   }
 
-  private_key = bdb_cfg['user']['private_key']
-  public_key = bdb_cfg['user']['public_key']
-  if burn:
-    lost_user = generate_keypair ()
-    public_key = lost_user.public_key # and do not store the key of the lost_user....
-    metadata = { 'burned_at': now_epoch }
-
   prepared_transfer_tx = bdb.transactions.prepare(
     operation='TRANSFER',
     asset=transfer_asset,
     inputs=transfer_input,
-    recipients=public_key,
-    metadata=metadata,
+    recipients=bdb_cfg['user']['public_key'],
+    metadata=db_metadata,
   )
 
   fulfilled_transfer_tx = bdb.transactions.fulfill(
     prepared_transfer_tx,
-    private_keys=private_key,
+    private_keys=bdb_cfg['user']['private_key'],
   )
 
   sent_transfer_tx = bdb.transactions.send(fulfilled_transfer_tx)
@@ -223,6 +238,50 @@ def do_append(asset_id, burn, metadata):
   return sent_transfer_tx['id']
 
 
+def do_burn(asset_id):
+  global bdb_cfg, bdb
+
+  now_epoch = calendar.timegm(time.gmtime())
+  db_metadata = { 'burned_at': now_epoch }
+
+  transfer_asset = { 'id': asset_id }
+
+  asset_details = bdb.transactions.get(asset_id=transfer_asset['id'])
+
+  output_index = 0
+  output = asset_details[0]['outputs'][output_index]
+  transfer_input = {
+    'fulfillment': output['condition']['details'],
+    'fulfills': {
+      'output_index': output_index,
+      'transaction_id': asset_details[-1]['id'],
+    },
+    'owners_before': output['public_keys'],
+  }
+
+  lost_user = generate_keypair ()
+
+  prepared_transfer_tx = bdb.transactions.prepare(
+    operation='TRANSFER',
+    asset=transfer_asset,
+    inputs=transfer_input,
+    recipients=lost_user.public_key,
+    metadata=db_metadata,
+  )
+
+  fulfilled_transfer_tx = bdb.transactions.fulfill(
+    prepared_transfer_tx,
+    private_keys=bdb_cfg['user']['private_key'],
+  )
+
+  sent_transfer_tx = bdb.transactions.send(fulfilled_transfer_tx)
+  if (sent_transfer_tx != fulfilled_transfer_tx):
+    return False
+
+  return sent_transfer_tx['id']
+
+
+
 @cli.command()
 @click.option('--asset-id', help='the asset-id of the object to append metadata to.')
 @click.option('--odo', help='append odo to metadata.')
@@ -230,7 +289,7 @@ def append(asset_id, odo):
   """ Append (CRAB) metadata to the bigchaindb. """
 
   metadata = {'odo': odo}
-  r = do_append (asset_id, False, metadata)
+  r = do_append (asset_id, metadata)
   if r == False:
     print ("ERROR: Failed to append asset...")
   else:
@@ -242,11 +301,11 @@ def append(asset_id, odo):
 def burn(asset_id):
   """ Burn (CRAB) metadata to the bigchaindb. """
 
-  r = do_append (asset_id, True, {})
+  r = do_burn (asset_id)
   if r == False:
     print ("ERROR: Failed to append asset...")
   else:
-    print ("Success: append asset with transaction-id: '{}'".format (r))
+    print ("Success: burn asset with transaction-id: '{}'".format (r))
 
 
 

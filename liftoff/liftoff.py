@@ -11,13 +11,18 @@ bdb_cfg = {}
 config_file = None
 bdb = None
 
+def load_cfg (cfg_file):
+  global bdb_cfg, config_file
+  config_file = cfg_file
+  with open('liftoff.yml', 'r') as f:
+    bdb_cfg = yaml.load(f)
+
 @click.group()
 @click.option('--config', help='configuration file.', default='liftoff.yml')
 def cli(config):
   """ LIFTOFF interface to blockchain. """
   global bdb_cfg, config_file, bdb
-  config_file = config
-  bdb_cfg = yaml.load(open(config, 'r'))
+  load_cfg (config)
 
   bdb = BigchainDB(
     bdb_cfg['bigchaindb']['url'],

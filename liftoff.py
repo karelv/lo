@@ -218,18 +218,11 @@ def do_append(asset_id, metadata):
     'owners_before': output['public_keys'],
   }
 
-  prepared_transfer_tx = bdb.transactions.prepare(
-    operation='TRANSFER',
-    asset=transfer_asset,
-    inputs=transfer_input,
-    recipients=bdb_cfg['user']['public_key'],
-    metadata=db_metadata,
-  )
+  prepared_transfer_tx = bdb.transactions.prepare(operation='TRANSFER', asset=transfer_asset,
+    inputs=transfer_input, recipients=bdb_cfg['user']['public_key'], metadata=db_metadata)
 
-  fulfilled_transfer_tx = bdb.transactions.fulfill(
-    prepared_transfer_tx,
-    private_keys=bdb_cfg['user']['private_key'],
-  )
+  fulfilled_transfer_tx = bdb.transactions.fulfill(prepared_transfer_tx,
+    private_keys=bdb_cfg['user']['private_key'])
 
   sent_transfer_tx = bdb.transactions.send(fulfilled_transfer_tx)
   if (sent_transfer_tx != fulfilled_transfer_tx):
@@ -261,18 +254,10 @@ def do_burn(asset_id):
 
   lost_user = generate_keypair ()
 
-  prepared_transfer_tx = bdb.transactions.prepare(
-    operation='TRANSFER',
-    asset=transfer_asset,
-    inputs=transfer_input,
-    recipients=lost_user.public_key,
-    metadata=db_metadata,
-  )
+  prepared_transfer_tx = bdb.transactions.prepare(operation='TRANSFER',  asset=transfer_asset,
+    inputs=transfer_input, recipients=lost_user.public_key, metadata=db_metadata)
 
-  fulfilled_transfer_tx = bdb.transactions.fulfill(
-    prepared_transfer_tx,
-    private_keys=bdb_cfg['user']['private_key'],
-  )
+  fulfilled_transfer_tx = bdb.transactions.fulfill(prepared_transfer_tx,  private_keys=bdb_cfg['user']['private_key'])
 
   sent_transfer_tx = bdb.transactions.send(fulfilled_transfer_tx)
   if (sent_transfer_tx != fulfilled_transfer_tx):

@@ -7,9 +7,9 @@ from pprint import pprint
 import calendar
 import time
 
-from liftoff_do import *
-
+bdb_cfg = {}
 config_file = None
+bdb = None
 
 @click.group()
 @click.option('--config', help='configuration file.', default='liftoff.yml')
@@ -290,7 +290,7 @@ def upload_simulation (playground, simulation_file):
 
   metadata = json.load(open(simulation_file, 'r'))
 
-  r = do_append (playground['id'], False, metadata)
+  r = do_append (playground['id'], metadata)
   if r == False:
     print ("ERROR: Failed to append asset...")
   else:

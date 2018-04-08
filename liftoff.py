@@ -48,13 +48,10 @@ def user(name, private_key):
     for key in show_keys:
       print ("{:>15s}: {}".format(key, bdb_cfg['user'][key]))
 
-def do_create (obj, obj_id, data, metadata):
-  global bdb_cfg, bdb
-
+def get_db_data(obj, obj_id, data):
+  global bdb_cfg
   now_epoch = calendar.timegm(time.gmtime())
-
-  db_data = {
-    'data': {
+  db_data = {'data': {
       'created_at': now_epoch,
       'index': '__liftoff__{app_key} {obj} {obj_id} '.format (app_key=bdb_cfg['headers']['app_key'], obj=obj, obj_id=obj_id),
       'object-type': obj,
@@ -62,27 +59,22 @@ def do_create (obj, obj_id, data, metadata):
       obj: data,
     }
   }
+  return db_data
 
+def do_create (obj, obj_id, data, metadata):
+  global bdb_cfg, bdb
+  db_data= get_db_data(obj, obj_id, data)
+
+  db_metadata = metadata
   if metadata is not None:
-    db_metadata = metadata
-    db_metadata['created_at'] = now_epoch
+    db_metadata['created_at'] = db_data['data']['created_at']
 
-    tx = bdb.transactions.prepare(
-      operation='CREATE',
-      signers=bdb_cfg['user']['public_key'],
-      asset=db_data,
-      metadata=db_metadata)
-  else:
-    tx = bdb.transactions.prepare(
-      operation='CREATE',
-      signers=bdb_cfg['user']['public_key'],
-      asset=db_data)
+  tx = bdb.transactions.prepare(operation='CREATE', signers=bdb_cfg['user']['public_key'],
+    asset=db_data, metadata=db_metadata)
 
   txid = tx['id']
 
-  signed_tx = bdb.transactions.fulfill(
-    tx,
-    private_keys=bdb_cfg['user']['private_key'])
+  signed_tx = bdb.transactions.fulfill( tx, private_keys=bdb_cfg['user']['private_key'])
 
   if (signed_tx != bdb.transactions.send(signed_tx)):
     return False

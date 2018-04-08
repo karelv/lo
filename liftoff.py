@@ -176,15 +176,7 @@ def query(query):
 
   do_print_assets(assets)
 
-def do_append(asset_id, metadata):
-  global bdb_cfg, bdb
-
-  now_epoch = calendar.timegm(time.gmtime())
-  db_metadata = metadata
-  db_metadata['appended_at'] = now_epoch
-
-  transfer_asset = { 'id': asset_id }
-
+def get_transfer_input (transfer_asset):
   asset_details = bdb.transactions.get(asset_id=transfer_asset['id'])
 
   output_index = 0
@@ -197,6 +189,18 @@ def do_append(asset_id, metadata):
     },
     'owners_before': output['public_keys'],
   }
+  return transfer_input
+
+def do_append(asset_id, metadata):
+  global bdb_cfg, bdb
+
+  now_epoch = calendar.timegm(time.gmtime())
+  db_metadata = metadata
+  db_metadata['appended_at'] = now_epoch
+
+  transfer_asset = { 'id': asset_id }
+
+  transfer_input = get_transfer_input (transfer_asset)
 
   prepared_transfer_tx = bdb.transactions.prepare(operation='TRANSFER', asset=transfer_asset,
     inputs=transfer_input, recipients=bdb_cfg['user']['public_key'], metadata=db_metadata)
